@@ -1,0 +1,43 @@
+RADIO 3DS - como instalar
+=========================
+
+Radio pela internet no 3DS (Old e New): gire o globo, centralize uma cidade
+e ouca as radios de la. Tem favoritos, busca, alarme e modo relogio.
+
+NO 3DS (escolha um jeito)
+- No HOME Menu, como um jogo: copie "Radio3DS.cia" para o SD e instale
+  pelo FBI. Depois pode apagar o .cia do SD.
+- Pelo Homebrew Launcher: copie "Radio3DS.3dsx" para a pasta /3ds/ do SD.
+- O 3DS precisa de CFW (Luma3DS) e do arquivo sdmc:/3ds/dspfirm.cdc
+  (rode o DSP1 uma vez). Sem ele nao ha som.
+
+ATUALIZAR SEM TIRAR O CARTAO
+- O app procura versao nova sozinho ao abrir. Quando tiver, aparece um
+  aviso. Va em Ajustes (engrenagem) > Instalar. Depois feche e abra o app.
+- Tambem da para procurar na mao: Ajustes > Atualizar.
+
+NO PC (opcional)
+- pc\atualizar_radios.bat baixa a lista mais nova de radios e cidades e
+  copia para o cartao SD (pasta 3ds\Radio3DS) se ele estiver conectado.
+  Precisa do Python 3 (https://www.python.org/downloads/, marque
+  "Add Python to PATH"). O app passa a usar essa lista.
+
+CONTROLES
+- Direcional circular: girar o globo. L / R: zoom.
+- A: ouvir. B: parar. X: favorito. Y: radio surpresa.
+- Direcional: cima/baixo navega na lista ou muda o volume, lados trocam de aba.
+- SELECT: modo relogio, depois telas apagadas. START: sair.
+
+ALARME
+- Aba do relogio: liga o alarme, hora, radio e temporizador para dormir.
+- Com o alarme ligado o 3DS nao dorme. Deixe no carregador.
+- O 3DS desliga o alto-falante com a tampa fechada (o fone continua).
+  A opcao "Som com a tampa fechada" tenta religar (experimental). Se nao
+  funcionar, deixe a tampa aberta e use o modo de telas apagadas.
+
+O QUE MUDOU NESTA VERSAO (1.1.0)
+- Atualizacao pelo proprio app (Wi-Fi), para .cia e .3dsx.
+- Corrigido: o .cia fechava ao abrir.
+- Corrigido: o console travava ao apertar HOME com radio tocando.
+- App mais leve no Old 3DS (cerca de 40% menos trabalho por quadro).
+- Lista de radios pode ser atualizada pelo PC (pasta pc).

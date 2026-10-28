@@ -1,0 +1,10 @@
+build/
+dist/
+*.elf
+*.3dsx
+*.cia
+*.smdh
+*.map
+tools/bin/
+pc/radios/
+__pycache__/
