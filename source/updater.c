@@ -13,7 +13,7 @@
 
 static char g_repo[64], g_version[16], g_3dsx_name[64], g_3dsx_path[256];
 static volatile UpdState g_state = UPD_IDLE;
-static char g_latest[16], g_url_cia[512], g_url_3dsx[512], g_msg[128];
+static char g_latest[32], g_url_cia[512], g_url_3dsx[512], g_msg[128];
 static volatile float g_prog;
 static Thread g_thread;
 static volatile bool g_busy;
@@ -75,7 +75,7 @@ static CURL *new_curl(const char *url)
 {
 	CURL *c = curl_easy_init();
 	if (!c) return NULL;
-	char ua[96];
+	char ua[160];
 	snprintf(ua, sizeof ua, "%s-updater/%s (Nintendo 3DS)", g_3dsx_name, g_version);
 	curl_easy_setopt(c, CURLOPT_URL, url);
 	curl_easy_setopt(c, CURLOPT_USERAGENT, ua);
@@ -201,7 +201,8 @@ static void install_thread(void *arg)
 	if (updater_is_cia()) {
 		if (R_FAILED(amInit())) { fail("Sem acesso ao instalador do sistema"); g_busy = false; return; }
 		Handle h;
-		if (R_FAILED(AM_StartCiaInstall(MEDIATYPE_SD, &h))) {
+		// "overwrite" lets the same title be reinstalled over itself (like FBI does)
+		if (R_FAILED(AM_StartCiaInstallOverwrite(&h, MEDIATYPE_SD)) && R_FAILED(AM_StartCiaInstall(MEDIATYPE_SD, &h))) {
 			amExit();
 			fail("O sistema recusou a instalação");
 			g_busy = false;

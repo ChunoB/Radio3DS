@@ -12,9 +12,10 @@ NO 3DS (escolha um jeito)
   (rode o DSP1 uma vez). Sem ele nao ha som.
 
 ATUALIZAR SEM TIRAR O CARTAO
-- O app procura versao nova sozinho ao abrir. Quando tiver, aparece um
-  aviso. Va em Ajustes (engrenagem) > Instalar. Depois feche e abra o app.
-- Tambem da para procurar na mao: Ajustes > Atualizar.
+- O app procura versao nova sozinho ao abrir (precisa de internet no
+  Wi-Fi). Quando tiver, aparece a janela "Versao nova": aperte A para
+  baixar e instalar. Depois feche e abra o app.
+- Tambem da para procurar na mao: Ajustes (engrenagem) > Atualizar.
 
 NO PC (opcional)
 - pc\atualizar_radios.bat baixa a lista mais nova de radios e cidades e
@@ -35,7 +36,12 @@ ALARME
   A opcao "Som com a tampa fechada" tenta religar (experimental). Se nao
   funcionar, deixe a tampa aberta e use o modo de telas apagadas.
 
-O QUE MUDOU NESTA VERSAO (1.1.0)
+O QUE MUDOU NESTA VERSAO (1.2.0)
+- Ao abrir, se tiver versao nova, o app pergunta "Atualizar agora?" e
+  instala com um toque (A).
+- Instalacao do .cia mais segura (reinstala por cima, como o FBI).
+
+VERSAO 1.1.0
 - Atualizacao pelo proprio app (Wi-Fi), para .cia e .3dsx.
 - Corrigido: o .cia fechava ao abrir.
 - Corrigido: o console travava ao apertar HOME com radio tocando.

@@ -15,7 +15,7 @@ enum {
 	BTN_ALARM_TOGGLE, BTN_AH_DN, BTN_AH_UP, BTN_AM_DN, BTN_AM_UP, BTN_ASRC_PREV, BTN_ASRC_NEXT,
 	BTN_SLEEP_PREV, BTN_SLEEP_NEXT, BTN_CLOCKMODE, BTN_TEST_ALARM, BTN_TZ_DN, BTN_TZ_UP,
 	BTN_SEARCH_FIELD, BTN_RING_CONT, BTN_RING_OFF, BTN_RING_SNOOZE, BTN_DARKMODE, BTN_SPK_LID,
-	BTN_UPDATE,
+	BTN_UPDATE, BTN_UPD_YES, BTN_UPD_NO,
 };
 
 #define ROW_H 18
@@ -826,6 +826,54 @@ static void draw_ring_overlay(void)
 	button(36, 176, 248, 26, "Desligar (B)", BTN_RING_OFF, false);
 }
 
+// "Versão nova" window: asks to update, then shows the download and the result.
+static bool upd_prompt, quit_app;
+
+static void draw_update_overlay(void)
+{
+	nbtns = 0;   // only these buttons are active
+	C2D_DrawRectSolid(0, 0, 0.5f, 320, 240, C2D_Color32(0, 0, 0, 120));
+	box(20, 40, 280, 160, WHITE, BLACK);
+	for (int i = 0; i < 6; i++) C2D_DrawRectSolid(22, 43 + i * 2, 0.5f, 276, 1, C2D_Color32(120, 120, 130, 255));
+	C2D_DrawRectSolid(110, 41, 0.5f, 100, 13, WHITE);
+	text_draw("Atualização", 160, 41, 0.47f, BLACK, 0, 1);
+	UpdState st = updater_state();
+	char t[128];
+	if (st == UPD_AVAILABLE) {
+		snprintf(t, sizeof t, "Versão %s disponível", updater_latest());
+		text_draw(t, 160, 68, 0.55f, BLACK, 260, 1);
+		snprintf(t, sizeof t, "Você tem a %s. Baixa pelo Wi-Fi e instala sozinho.", updater_version());
+		text_draw(t, 160, 92, 0.4f, GRAY, 264, 1);
+		button(36, 124, 248, 28, "Atualizar agora (A)", BTN_UPD_YES, true);
+		button(36, 160, 248, 28, "Depois (B)", BTN_UPD_NO, false);
+	} else if (st == UPD_DOWNLOADING || st == UPD_INSTALLING || st == UPD_CHECKING) {
+		text_draw(st == UPD_INSTALLING ? "Instalando..." : "Baixando...", 160, 72, 0.55f, BLACK, 260, 1);
+		text_draw(updater_message(), 160, 98, 0.4f, GRAY, 264, 1);
+		float p = updater_progress();
+		box(40, 130, 240, 14, WHITE, BLACK);
+		C2D_DrawRectSolid(42, 132, 0.5f, 236 * (p < 0 ? 0 : p > 1 ? 1 : p), 10, BLUE);
+		text_draw("Não desligue o 3DS", 160, 160, 0.4f, GRAY, 0, 1);
+	} else if (st == UPD_DONE) {
+		text_draw("Pronto!", 160, 68, 0.6f, BLACK, 260, 1);
+		text_draw(updater_message(), 160, 94, 0.4f, GRAY, 264, 1);
+		button(36, 124, 248, 28, "Fechar o app (A)", BTN_UPD_YES, true);
+		button(36, 160, 248, 28, "Continuar (B)", BTN_UPD_NO, false);
+	} else {
+		text_draw("Não deu para atualizar", 160, 72, 0.55f, BLACK, 260, 1);
+		text_draw(updater_message(), 160, 98, 0.4f, GRAY, 264, 1);
+		button(36, 150, 248, 28, "OK (B)", BTN_UPD_NO, false);
+	}
+}
+
+static void update_answer(bool yes)
+{
+	UpdState st = updater_state();
+	if (updater_busy()) return;
+	if (yes && st == UPD_AVAILABLE) updater_install();
+	else if (yes && st == UPD_DONE) quit_app = true;
+	else if (!yes) upd_prompt = false;
+}
+
 static void draw_bottom(void)
 {
 	C2D_TargetClear(t_bot, WHITE);
@@ -851,6 +899,7 @@ static void draw_bottom(void)
 		text_draw(toast_msg, 160, 189, 0.45f, WHITE, 300, 1);
 	}
 	if (ringing) draw_ring_overlay();
+	else if (upd_prompt) draw_update_overlay();
 	memcpy(pbtns, btns, nbtns * sizeof(Btn));
 	npbtns = nbtns;
 }
@@ -893,9 +942,11 @@ static void press_button(int id)
 	case BTN_TEST_ALARM: start_alarm(); break;
 	case BTN_SPK_LID: g_cfg.spk_lid = !g_cfg.spk_lid; config_save(); break;
 	case BTN_UPDATE:
-		if (updater_state() == UPD_AVAILABLE) updater_install();
+		if (updater_state() == UPD_AVAILABLE) upd_prompt = true;
 		else if (!updater_busy() && updater_state() != UPD_DONE) updater_check();
 		break;
+	case BTN_UPD_YES: update_answer(true); break;
+	case BTN_UPD_NO: update_answer(false); break;
 	case BTN_TZ_DN: if (g_cfg.tz > -720) g_cfg.tz -= 30; break;
 	case BTN_TZ_UP: if (g_cfg.tz < 840) g_cfg.tz += 30; break;
 	case BTN_SEARCH_FIELD: do_search(); break;
@@ -933,7 +984,7 @@ static void handle_touch(u32 down, u32 held, u32 up)
 		// list area?
 		touch_in_list = false;
 		dragging = false;
-		if (!ringing && lst.tab == tab && list_rows(tab) && tp.py >= lst.y0 && tp.py < lst.y0 + lst.rows * ROW_H && tp.px < 316) {
+		if (!ringing && !upd_prompt && lst.tab == tab && list_rows(tab) && tp.py >= lst.y0 && tp.py < lst.y0 + lst.rows * ROW_H && tp.px < 316) {
 			touch_in_list = true;
 			touch_start_y = tp.py;
 			touch_start_top = top_row[tab];
@@ -971,6 +1022,11 @@ static void handle_keys(u32 down, u32 rep, u32 held)
 		if (down & KEY_A) ring_continue();
 		else if (down & KEY_B) ring_off();
 		else if (down & KEY_X) ring_snooze();
+		return;
+	}
+	if (upd_prompt) {
+		if (down & KEY_A) update_answer(true);
+		else if (down & KEY_B) update_answer(false);
 		return;
 	}
 	if (down & KEY_SELECT) {
@@ -1153,10 +1209,14 @@ int main(int argc, char **argv)
 		if (net_ok && !upd_checked && osGetTime() - t_start > 4000) { upd_checked = true; updater_check(); }
 		if (!upd_told && updater_state() == UPD_AVAILABLE) {
 			upd_told = true;
-			char m[96];
-			snprintf(m, sizeof m, "Versão %s disponível: Ajustes > Instalar", updater_latest());
-			toast(m);
+			if (mode == MODE_NORMAL && !ringing) upd_prompt = true;   // asks "update now?"
+			else {
+				char m[96];
+				snprintf(m, sizeof m, "Versão %s disponível: Ajustes > Instalar", updater_latest());
+				toast(m);
+			}
 		}
+		if (quit_app) break;
 		hidScanInput();
 		u32 down = hidKeysDown(), held = hidKeysHeld(), up = hidKeysUp(), rep = hidKeysDownRepeat();
 		now_ms = osGetTime();

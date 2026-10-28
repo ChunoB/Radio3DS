@@ -37,7 +37,7 @@ APP_DESCRIPTION	:=	Radios do mundo todo num globo
 APP_AUTHOR	:=	Bruno Bellini
 # version: bump it for every release (the in-app updater compares it with GitHub)
 VERSION_MAJOR	:=	1
-VERSION_MINOR	:=	1
+VERSION_MINOR	:=	2
 VERSION_MICRO	:=	0
 VERSION		:=	$(VERSION_MAJOR).$(VERSION_MINOR).$(VERSION_MICRO)
 BUILD		:=	build
