@@ -33,10 +33,18 @@ ALARME
 - Aba do relogio: liga o alarme, hora, radio e temporizador para dormir.
 - Com o alarme ligado o 3DS nao dorme. Deixe no carregador.
 - O 3DS desliga o alto-falante com a tampa fechada (o fone continua).
-  A opcao "Som com a tampa fechada" tenta religar (experimental). Se nao
+  A opcao "Som com a tampa fechada" tenta religar (experimental, vem
+  desligada: ela mexe no chip de audio e pode travar o HOME). Se nao
   funcionar, deixe a tampa aberta e use o modo de telas apagadas.
 
-O QUE MUDOU NESTA VERSAO (1.2.0)
+O QUE MUDOU NESTA VERSAO (1.2.1)
+- Correcao do HOME travando: o "Som com a tampa fechada" (experimental)
+  agora vem desligado, e o app solta o chip de audio antes de ir para o
+  HOME. A espera para a radio parar tem limite.
+- Se o HOME travar de novo, ao abrir o app mostra em que etapa parou
+  (fica em /3ds/radio3ds_home.log no cartao SD). Me diga a etapa.
+
+VERSAO 1.2.0
 - Ao abrir, se tiver versao nova, o app pergunta "Atualizar agora?" e
   instala com um toque (A).
 - Instalacao do .cia mais segura (reinstala por cima, como o FBI).

@@ -602,9 +602,11 @@ void player_stop(void)
 	Session *s = g_cur;
 	if (!s) return;
 	s->cancel = true;
+	bool joined = true;
 	if (g_dec) {
-		threadJoin(g_dec, U64_MAX);
-		threadFree(g_dec);
+		// at most 2 s: a decoder stuck somewhere must not freeze the app (or the trip to HOME)
+		joined = R_SUCCEEDED(threadJoin(g_dec, 2000000000ULL));
+		if (joined) threadFree(g_dec);
 		g_dec = NULL;
 	}
 	LightLock_Lock(&g_audio_lock);
@@ -612,7 +614,7 @@ void player_stop(void)
 	memset(g_wb, 0, sizeof g_wb);
 	LightLock_Unlock(&g_audio_lock);
 	g_cur = NULL;
-	sess_release(s);
+	if (joined) sess_release(s);   // a decoder that did not stop may still use the session: leave it
 }
 
 PlayerState player_state(void)

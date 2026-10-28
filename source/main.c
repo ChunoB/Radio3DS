@@ -375,13 +375,53 @@ static void apt_cb(APT_HookType hook, void *param)
 
 // HOME is handled here instead of inside aptMainLoop: letting libctru suspend a running
 // NDSP can freeze the console, so audio is shut down first and restarted on the way back.
+// Each step of the trip to HOME goes to a small log on the SD card. If the console
+// freezes, the next start shows the last step reached, so the cause can be found.
+#define HOME_LOG "sdmc:/3ds/radio3ds_home.log"
+
+static void home_log(const char *step, bool first)
+{
+	FILE *f = fopen(HOME_LOG, first ? "w" : "a");
+	if (!f) return;
+	fprintf(f, "%s\n", step);
+	fclose(f);
+}
+
+// Called at startup: did the last trip to HOME stop halfway?
+static void home_log_check(void)
+{
+	FILE *f = fopen(HOME_LOG, "r");
+	if (!f) return;
+	char line[64], last[64] = "";
+	while (fgets(line, sizeof line, f)) {
+		line[strcspn(line, "\r\n")] = 0;
+		if (line[0]) snprintf(last, sizeof last, "%s", line);
+	}
+	fclose(f);
+	if (last[0] && strcmp(last, "fim")) {
+		char m[96];
+		snprintf(m, sizeof m, "O HOME travou da última vez (etapa: %s)", last);
+		toast(m);
+		home_log("fim", true);   // tell only once
+	}
+}
+
 static void go_home(void)
 {
 	bool was_playing = player_state() != PL_STOPPED && now_url[0];
+	home_log("parando o som", true);
 	bool tone = player_suspend();
+	home_log("fechando o codec", false);
+	speaker_exit();                  // no debug codec session open while HOME runs
+	home_log("indo para o HOME", false);
 	aptJumpToHomeMenu();
-	if (aptShouldClose()) return;   // closed from the HOME menu
-	if (player_resume()) {
+	if (aptShouldClose()) { home_log("fechado pelo HOME", false); return; }
+	home_log("voltou do HOME", false);
+	speaker_init(audio_ok);
+	home_log("religando o som", false);
+	bool back = player_resume();
+	home_log("fim", false);
+	if (back) {
 		cur_vol = -1;                // volume is applied again on the next frame
 		if (was_playing) player_play(now_url);
 		if (tone) player_tone(true);
@@ -1181,6 +1221,7 @@ int main(int argc, char **argv)
 	globe_init();
 	audio_ok = player_init();
 	speaker_init(audio_ok);
+	home_log_check();
 	vlat = g_cfg.view_lat;
 	vlon = g_cfg.view_lon;
 	zoom = g_cfg.zoom;

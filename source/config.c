@@ -20,7 +20,7 @@ static void defaults(void)
 	g_cfg.view_lon = -47.9f;
 	g_cfg.zoom = 1.0f;
 	g_cfg.last_place = -1;
-	g_cfg.spk_lid = true;
+	g_cfg.spk_lid = false;      // experimental: writing codec registers may hang HOME on real hardware
 }
 
 static void chomp(char *s)
@@ -56,7 +56,7 @@ void config_load(void)
 			else if (!strcmp(k, "last_name")) snprintf(g_cfg.last_name, sizeof g_cfg.last_name, "%s", v);
 			else if (!strcmp(k, "last_url")) snprintf(g_cfg.last_url, sizeof g_cfg.last_url, "%s", v);
 			else if (!strcmp(k, "last_place")) g_cfg.last_place = atoi(v);
-			else if (!strcmp(k, "spk_lid")) g_cfg.spk_lid = atoi(v) != 0;
+			else if (!strcmp(k, "spk_lid2")) g_cfg.spk_lid = atoi(v) != 0;
 		}
 		fclose(f);
 	}
@@ -99,7 +99,7 @@ void config_save(void)
 	        g_cfg.volume, g_cfg.tz, g_cfg.alarm_on, g_cfg.alarm_h, g_cfg.alarm_m, g_cfg.alarm_src);
 	fprintf(f, "view_lat=%.3f\nview_lon=%.3f\nzoom=%.2f\n", g_cfg.view_lat, g_cfg.view_lon, g_cfg.zoom);
 	fprintf(f, "last_name=%s\nlast_url=%s\nlast_place=%d\n", g_cfg.last_name, g_cfg.last_url, g_cfg.last_place);
-	fprintf(f, "spk_lid=%d\n", g_cfg.spk_lid);
+	fprintf(f, "spk_lid2=%d\n", g_cfg.spk_lid);   // new key: the old "spk_lid=1" (on by default) is ignored
 	fclose(f);
 }
 
