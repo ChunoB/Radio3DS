@@ -37,7 +37,13 @@ ALARME
   desligada: ela mexe no chip de audio e pode travar o HOME). Se nao
   funcionar, deixe a tampa aberta e use o modo de telas apagadas.
 
-O QUE MUDOU NESTA VERSAO (1.2.1)
+O QUE MUDOU NESTA VERSAO (1.2.2)
+- HOME travando mesmo sem som: com o som desligado, o HOME agora e o do
+  proprio sistema (como em qualquer app). So com o som ligado o app
+  desliga o audio antes e vai para o HOME por conta propria.
+- Se travar de novo, ao abrir o app mostra a etapa onde parou. Me diga.
+
+VERSAO 1.2.1
 - Correcao do HOME travando: o "Som com a tampa fechada" (experimental)
   agora vem desligado, e o app solta o chip de audio antes de ir para o
   HOME. A espera para a radio parar tem limite.

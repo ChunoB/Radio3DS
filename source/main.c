@@ -39,6 +39,7 @@ static char  now_name[64], now_url[512];
 static int   now_place = -1;
 static int   mode = MODE_NORMAL;
 static bool  audio_ok;
+static void update_home_mode(void);
 static bool  lid_closed, bl_top = true, bl_bot = true;
 static bool  stereo_on;
 static bool  sleep_allowed = true;
@@ -363,13 +364,31 @@ static void update_power(void)
 	}
 
 	speaker_update(lid_closed, ringing || player_state() != PL_STOPPED, now_ms);
+	update_home_mode();
 }
+
+static void home_log(const char *step, bool first);
 
 static void apt_cb(APT_HookType hook, void *param)
 {
 	if (hook == APTHOOK_ONSUSPEND || hook == APTHOOK_ONSLEEP || hook == APTHOOK_ONEXIT) {
 		GSPLCD_PowerOnAllBacklights();
 		bl_top = bl_bot = true;
+	}
+	if (hook == APTHOOK_ONSUSPEND) home_log("suspendendo (HOME)", false);
+	else if (hook == APTHOOK_ONRESTORE || hook == APTHOOK_ONEXIT) home_log("fim", false);
+}
+
+// HOME goes through the system (like every app) while NDSP is off. Only while audio is
+// on, HOME is caught by go_home() so NDSP can be shut down before the jump.
+static bool home_manual;
+
+static void update_home_mode(void)
+{
+	bool manual = player_audio_on();
+	if (manual != home_manual) {
+		home_manual = manual;
+		aptSetHomeAllowed(!manual);
 	}
 }
 
@@ -402,8 +421,8 @@ static void home_log_check(void)
 		char m[96];
 		snprintf(m, sizeof m, "O HOME travou da última vez (etapa: %s)", last);
 		toast(m);
-		home_log("fim", true);   // tell only once
 	}
+	home_log("fim", true);   // tell only once (and keep the file small)
 }
 
 static void go_home(void)
@@ -414,8 +433,12 @@ static void go_home(void)
 	home_log("fechando o codec", false);
 	speaker_exit();                  // no debug codec session open while HOME runs
 	home_log("indo para o HOME", false);
+	// audio is off now: HOME is allowed again before the jump (jumping while HOME is
+	// disallowed may be what froze the console); update_home_mode() sets it each frame
+	aptSetHomeAllowed(true);
+	home_manual = false;
 	aptJumpToHomeMenu();
-	if (aptShouldClose()) { home_log("fechado pelo HOME", false); return; }
+	if (aptShouldClose()) { home_log("fim", false); return; }   // closed from the HOME menu
 	home_log("voltou do HOME", false);
 	speaker_init(audio_ok);
 	home_log("religando o som", false);
@@ -1210,7 +1233,8 @@ int main(int argc, char **argv)
 
 	aptHookCookie cookie;
 	aptHook(&cookie, apt_cb, NULL);
-	aptSetHomeAllowed(false);   // see go_home()
+	home_manual = false;
+	update_home_mode();          // HOME by the system while audio is off; see go_home()
 	hidSetRepeatParameters(18, 5);
 
 	if (!db_load()) {

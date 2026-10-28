@@ -38,7 +38,7 @@ APP_AUTHOR	:=	Bruno Bellini
 # version: bump it for every release (the in-app updater compares it with GitHub)
 VERSION_MAJOR	:=	1
 VERSION_MINOR	:=	2
-VERSION_MICRO	:=	1
+VERSION_MICRO	:=	2
 VERSION		:=	$(VERSION_MAJOR).$(VERSION_MINOR).$(VERSION_MICRO)
 BUILD		:=	build
 SOURCES		:=	source
