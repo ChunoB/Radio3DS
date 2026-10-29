@@ -371,12 +371,16 @@ static void home_log(const char *step, bool first);
 
 static void apt_cb(APT_HookType hook, void *param)
 {
-	if (hook == APTHOOK_ONSUSPEND || hook == APTHOOK_ONSLEEP || hook == APTHOOK_ONEXIT) {
+	if (hook == APTHOOK_ONSUSPEND) home_log("sistema indo para o HOME", false);
+	else if (hook == APTHOOK_ONSLEEP) home_log("indo dormir", false);
+	// screens are only lit here when the app turned them off (clock/dark mode); in the
+	// normal case nothing else is asked of the system while it suspends us
+	if ((hook == APTHOOK_ONSUSPEND || hook == APTHOOK_ONSLEEP || hook == APTHOOK_ONEXIT) && !(bl_top && bl_bot)) {
 		GSPLCD_PowerOnAllBacklights();
 		bl_top = bl_bot = true;
+		if (hook != APTHOOK_ONEXIT) home_log("telas religadas", false);
 	}
-	if (hook == APTHOOK_ONSUSPEND) home_log("suspendendo (HOME)", false);
-	else if (hook == APTHOOK_ONRESTORE || hook == APTHOOK_ONEXIT) home_log("fim", false);
+	if (hook == APTHOOK_ONRESTORE || hook == APTHOOK_ONWAKEUP || hook == APTHOOK_ONEXIT) home_log("fim", false);
 }
 
 // HOME goes through the system (like every app) while NDSP is off. Only while audio is
@@ -406,7 +410,10 @@ static void home_log(const char *step, bool first)
 	fclose(f);
 }
 
-// Called at startup: did the last trip to HOME stop halfway?
+// Called at startup: did the last trip to HOME stop halfway? The note stays in Ajustes
+// and a copy goes to radio3ds_travou.log (the step log itself starts over).
+static char home_note[96];
+
 static void home_log_check(void)
 {
 	FILE *f = fopen(HOME_LOG, "r");
@@ -418,9 +425,14 @@ static void home_log_check(void)
 	}
 	fclose(f);
 	if (last[0] && strcmp(last, "fim")) {
-		char m[96];
-		snprintf(m, sizeof m, "O HOME travou da última vez (etapa: %s)", last);
-		toast(m);
+		snprintf(home_note, sizeof home_note, "O HOME travou da última vez (etapa: %s)", last);
+		toast(home_note);
+		toast_until = now_ms + 15000;
+		FILE *c = fopen("sdmc:/3ds/radio3ds_travou.log", "a");
+		if (c) {
+			fprintf(c, "versao %s: travou na etapa \"%s\"\n", APP_VERSION, last);
+			fclose(c);
+		}
 	}
 	home_log("fim", true);   // tell only once (and keep the file small)
 }
@@ -841,8 +853,11 @@ static void draw_tab_settings(void)
 
 	bool n3ds = false;
 	APT_CheckNew3DS(&n3ds);
-	snprintf(b, sizeof b, "%d rádios em %d cidades · %s", g_nstations, g_nplaces, n3ds ? "New 3DS" : "Old 3DS");
-	text_draw(b, 160, 199, 0.38f, GRAY, 304, 1);
+	if (home_note[0]) text_draw(home_note, 160, 199, 0.38f, RED, 304, 1);
+	else {
+		snprintf(b, sizeof b, "%d rádios em %d cidades · %s", g_nstations, g_nplaces, n3ds ? "New 3DS" : "Old 3DS");
+		text_draw(b, 160, 199, 0.38f, GRAY, 304, 1);
+	}
 }
 
 static void draw_status(void)
@@ -1250,6 +1265,7 @@ int main(int argc, char **argv)
 	globe_init();
 	audio_ok = player_init();
 	speaker_init(audio_ok);
+	now_ms = osGetTime();        // toasts shown before the first frame need the clock
 	home_log_check();
 	vlat = g_cfg.view_lat;
 	vlon = g_cfg.view_lon;

@@ -42,7 +42,15 @@ SE O APP NAO ATUALIZAR SOZINHO
   qualquer site de QR): https://github.com/ChunoB/Radio3DS/releases/latest/download/Radio3DS.cia
   Ele sempre instala a versao mais nova.
 
-O QUE MUDOU NESTA VERSAO (1.2.3)
+O QUE MUDOU NESTA VERSAO (1.2.4)
+- O aviso "O HOME travou da ultima vez (etapa: ...)" agora aparece de
+  verdade (antes sumia antes de ser desenhado): fica 15 s embaixo e fixo
+  no fim da aba Ajustes. Cada travamento fica anotado tambem em
+  /3ds/radio3ds_travou.log no cartao SD.
+- No HOME o app nao mexe mais na luz das telas quando elas ja estao
+  acesas.
+
+VERSAO 1.2.3
 - Menos travamentos: o app so mexe no chip de audio do 3DS se a opcao
   "Som com a tampa fechada" estiver ligada. Antes ele abria o chip ao
   iniciar e ao voltar do HOME, e na 1.2.1 a opcao continuava ligada para
