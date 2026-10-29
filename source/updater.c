@@ -16,7 +16,7 @@ static volatile UpdState g_state = UPD_IDLE;
 static char g_latest[32], g_url_cia[512], g_url_3dsx[512], g_msg[128];
 static volatile float g_prog;
 static Thread g_thread;
-static volatile bool g_busy;
+static volatile bool g_busy, g_abort;
 
 void updater_init(const char *repo, const char *version, const char *name_3dsx, const char *path_3dsx)
 {
@@ -68,7 +68,7 @@ static size_t mem_write(char *p, size_t sz, size_t n, void *ud)
 static int on_progress(void *ud, curl_off_t total, curl_off_t now, curl_off_t ut, curl_off_t un)
 {
 	if (total > 0) g_prog = (float)now / (float)total;
-	return 0;
+	return g_abort;   // closing the app: stop the transfer now
 }
 
 static CURL *new_curl(const char *url)
@@ -87,6 +87,8 @@ static CURL *new_curl(const char *url)
 	curl_easy_setopt(c, CURLOPT_LOW_SPEED_TIME, 30L);
 	curl_easy_setopt(c, CURLOPT_FAILONERROR, 1L);
 	curl_easy_setopt(c, CURLOPT_BUFFERSIZE, 64 * 1024L);
+	curl_easy_setopt(c, CURLOPT_NOPROGRESS, 0L);
+	curl_easy_setopt(c, CURLOPT_XFERINFOFUNCTION, on_progress);
 	return c;
 }
 
@@ -128,6 +130,7 @@ static void check_thread(void *arg)
 	if (!c) { fail("Sem memória"); g_busy = false; return; }
 	struct curl_slist *h = curl_slist_append(NULL, "Accept: application/vnd.github+json");
 	curl_easy_setopt(c, CURLOPT_HTTPHEADER, h);
+	curl_easy_setopt(c, CURLOPT_TIMEOUT, 25L);
 	curl_easy_setopt(c, CURLOPT_WRITEFUNCTION, mem_write);
 	curl_easy_setopt(c, CURLOPT_WRITEDATA, &m);
 	CURLcode r = curl_easy_perform(c);
@@ -299,11 +302,12 @@ void updater_install(void)
 
 bool updater_busy(void) { return g_busy; }
 
+// Closing the app: cancel any download and wait at most 2 s.
 void updater_exit(void)
 {
 	if (g_thread) {
-		threadJoin(g_thread, U64_MAX);
-		threadFree(g_thread);
+		g_abort = true;
+		if (R_SUCCEEDED(threadJoin(g_thread, 2000000000ULL))) threadFree(g_thread);
 		g_thread = NULL;
 	}
 }

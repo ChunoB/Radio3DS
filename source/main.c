@@ -932,7 +932,12 @@ static void update_answer(bool yes)
 {
 	UpdState st = updater_state();
 	if (updater_busy()) return;
-	if (yes && st == UPD_AVAILABLE) updater_install();
+	if (yes && st == UPD_AVAILABLE) {
+		// a quiet system while the installer runs: no radio stream, no codec session
+		player_stop();
+		speaker_exit();
+		updater_install();
+	}
 	else if (yes && st == UPD_DONE) quit_app = true;
 	else if (!yes) upd_prompt = false;
 }

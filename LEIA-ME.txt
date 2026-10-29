@@ -37,7 +37,20 @@ ALARME
   desligada: ela mexe no chip de audio e pode travar o HOME). Se nao
   funcionar, deixe a tampa aberta e use o modo de telas apagadas.
 
-O QUE MUDOU NESTA VERSAO (1.2.2)
+SE O APP NAO ATUALIZAR SOZINHO
+- No FBI: Remote Install > Scan QR Code, e leia o QR deste link (gere em
+  qualquer site de QR): https://github.com/ChunoB/Radio3DS/releases/latest/download/Radio3DS.cia
+  Ele sempre instala a versao mais nova.
+
+O QUE MUDOU NESTA VERSAO (1.2.3)
+- Menos travamentos: o app so mexe no chip de audio do 3DS se a opcao
+  "Som com a tampa fechada" estiver ligada. Antes ele abria o chip ao
+  iniciar e ao voltar do HOME, e na 1.2.1 a opcao continuava ligada para
+  quem ja tinha ligado antes.
+- Atualizar pelo app: o som para antes de instalar, a busca desiste em
+  25 s e fechar o app cancela o download na hora.
+
+VERSAO 1.2.2
 - HOME travando mesmo sem som: com o som desligado, o HOME agora e o do
   proprio sistema (como em qualquer app). So com o som ligado o app
   desliga o audio antes e vai para o HOME por conta propria.

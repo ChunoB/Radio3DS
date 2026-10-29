@@ -70,11 +70,24 @@ static bool headphones(void)
 	return in;
 }
 
+// The codec is only opened while the option is on: touching the codec through this
+// debug service is the main suspect for the console freezing.
+static bool open_failed;
+
 void speaker_init(bool audio_ok)
 {
 	audio = audio_ok;
+	open_failed = false;
+	snprintf(status, sizeof status, "Desligado");
+}
+
+static void speaker_open(void)
+{
 	struct stat st;
 	if (stat(LOG_PATH, &st) == 0 && st.st_size > 128 * 1024) remove(LOG_PATH);
+	open_failed = true;   // until it works: never retried every frame
+	have_open = false;
+	snprintf(status, sizeof status, "Aguardando a tampa fechar");
 
 	// asking for a service that isn't registered blocks forever by default
 	srvSetBlockingPolicy(true);
@@ -94,6 +107,7 @@ void speaker_init(bool audio_ok)
 		return;
 	}
 	ok = true;
+	open_failed = false;
 	bool n3ds = false;
 	APT_CheckNew3DS(&n3ds);
 	codec_log("--- iniciado (%s 3DS)", n3ds ? "New" : "Old");
@@ -144,6 +158,15 @@ static void log_diffs(const u8 cur[NPAGES][128])
 
 void speaker_update(bool lid_closed, bool want_sound, u64 now)
 {
+	if (!g_cfg.spk_lid) {
+		if (ok) {
+			speaker_exit();
+			snprintf(status, sizeof status, "Desligado");
+		}
+		open_failed = false;
+		return;
+	}
+	if (!ok && !open_failed) speaker_open();
 	if (!ok) return;
 
 	if (!lid_closed) {
