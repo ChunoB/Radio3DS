@@ -179,6 +179,7 @@ cia: all
 	@tools/bin/bannertool.exe makebanner -i banner.png -a banner.wav -o $(BUILD)/banner.bnr
 	@tools/bin/makerom.exe -f cia -o $(TARGET).cia -elf $(TARGET).elf -rsf app.rsf -icon $(BUILD)/cia.smdh -banner $(BUILD)/banner.bnr -exefslogo -target t \
 		-major $(VERSION_MAJOR) -minor $(VERSION_MINOR) -micro $(VERSION_MICRO)
+	@py tools/versao_cia.py $(TARGET).cia $(VERSION)   # o makerom ignora o -minor
 	@echo built ... $(TARGET).cia
 
 $(BUILD):
